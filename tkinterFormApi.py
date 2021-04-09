@@ -32,16 +32,19 @@ class Form:
         self.create_new_screen(width, height, title)
         self.contents = {}
         self.info = []
-         
+        self.widget_maker = Widget_Maker(self.screen)
 
     ''' === methods for to add widgets === '''
 
+    
+    
     def create_new_screen(self, width, height, title):
         ''' create a new screen and destroy the old one '''
         if self.screen != None: self.screen.destroy() 
         self.screen = tk.Tk()
         self.screen.geometry(f'{width}x{height}')
-        self.screen.title(title)   
+        self.screen.title(title)
+        
 
     def add_checkbox(self, text, true_command=None, false_command=None, pack=True, size=(), coord=()) -> tuple[UUID, BooleanVar]:
         id,variable = self._create_form_content(Content_type.CHECKBOX, text, size, coord, pack, true_command=true_command, false_command=false_command)
@@ -50,13 +53,13 @@ class Form:
     def add_button(self, text, command, pack=True, size=(), coord=()) -> UUID:
         ''' create a "button", if to be packed, packed = True.
         @return id of the widget'''
-        id, _ = self._create_form_content(Content_type.BUTTON, text, size, coord, pack, command=command)
+        id, _ = self.widget_maker._create_form_content(Content_type.BUTTON, text, size, coord, pack, command=command)
         return id 
 
     def add_label(self, text, pack=True, size=(), coord=()) -> UUID:
         ''' create a "label" widget, if to be packed, packed = True.
         @return id of the widget'''
-        id, _ = self._create_form_content(Content_type.LABEL, text, size, coord, pack)
+        id, _ = self.widget_maker._create_form_content(Content_type.LABEL, text, size, coord, pack)
         return id
 
     def add_text(self, text, pack=True, size=(), coord=())-> tuple:
@@ -64,21 +67,21 @@ class Form:
         Text widget is more advanced than Entry Widget and will wrap text
         if to be packed, packed = True.
         @return id of the widget'''
-        id, var = self._create_form_content(Content_type.TEXT, text, size, coord, pack)
+        id, var = self.widget_maker._create_form_content(Content_type.TEXT, text, size, coord, pack)
         return id, var
         
     def add_entry(self, text, pack=True, size=(), coord=())-> tuple:
         ''' create an "entry" widget, if to be packed, packed = True.
         Entry widget is more limited than entry widget. better for short input
         @return id of the widget and the variable'''
-        id, var = self._create_form_content(Content_type.ENTRY, text, size, coord, pack)
+        id, var = self.widget_maker._create_form_content(Content_type.ENTRY, text, size, coord, pack)
         return id, var
 
     def add_option_menu(self, text, options: list[str], pack=True, size=(), coord=()) -> tuple[UUID, StringVar]:
         ''' create an "option" widget, 
         @param options: list of options for user to chose. Must be list of strings
         @return id of the widget and the variable created'''
-        id, var = self._create_form_content(Content_type.OPTIONS, text, size, coord, pack, options=options)
+        id, var = self.widget_maker._create_form_content(Content_type.OPTIONS, text, size, coord, pack, options=options)
         return id, var
 
     ''' === methods to change widgets === '''
@@ -154,6 +157,11 @@ class Form:
     ''' === methods for private use only === '''
 
 
+class Widget_Maker:
+    
+    def __init__(self, screen):
+        self.screen = screen
+    
     def _create_form_content(self, widget_type, text, size=(), coord=(), pack=True, options=[], command=None, true_command=None, false_command=None):
         ''' internal use to create the widgets and return their id and variables if applicable '''
         if size != (): width,height = size
