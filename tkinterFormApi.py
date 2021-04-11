@@ -24,20 +24,30 @@ class TextWrapper:
 
 
 class Form:
-    def __init__(self, width, height, title):
+    def __init__(self, width, height, title, parent=None):
         ''' creates the form with width and height specified
+        @param parent: the parent screen if a form will create a child form
         to run the form, call mainloop() '''
 
         self.screen = None
-        self.create_new_screen(width, height, title)
+        if parent != None: self.create_new_screen(width, height, title)
+        else: self.additional_window(width, height, title, parent)
         self.contents = {}
         self.info = []
         self.widget_maker = Widget_Maker(self.screen)
 
     ''' === methods for to add widgets === '''
 
-    
-    
+    def additional_window(self, width, height, title, parent):
+        self.screen = Toplevel(parent)
+        self.screen.geometry(f'{width}x{height}')
+        self.screen.title(title)
+        
+    def generate_child(self, width, height, title):
+        ''' create a child of this form and return the Form object '''
+        form = Form(width, height, title, parent=self.screen)
+        return form
+
     def create_new_screen(self, width, height, title):
         ''' create a new screen and destroy the old one '''
         if self.screen != None: self.screen.destroy() 
@@ -46,7 +56,7 @@ class Form:
         self.screen.title(title)
         
 
-    def add_checkbox(self, text, true_command=None, false_command=None, pack=True, size=(), coord=()) -> tuple[UUID, BooleanVar]:
+    def add_checkbox(self, text, true_command=None, false_command=None, pack=True, size=(), coord=()) -> "tuple[UUID, BooleanVar]":
         id,variable = self._create_form_content(Content_type.CHECKBOX, text, size, coord, pack, true_command=true_command, false_command=false_command)
         return id, variable
 
@@ -77,7 +87,7 @@ class Form:
         id, var = self.widget_maker._create_form_content(Content_type.ENTRY, text, size, coord, pack)
         return id, var
 
-    def add_option_menu(self, text, options: list[str], pack=True, size=(), coord=()) -> tuple[UUID, StringVar]:
+    def add_option_menu(self, text, options: list, pack=True, size=(), coord=()) -> "tuple[UUID, StringVar]":
         ''' create an "option" widget, 
         @param options: list of options for user to chose. Must be list of strings
         @return id of the widget and the variable created'''
@@ -87,29 +97,29 @@ class Form:
     ''' === methods to change widgets === '''
 
     def enable(self, id):
-        for item in self.contents[id]:
+        for item in self.widget_maker.contents[id]:
             item.config(state=NORMAL)
 
     def disable(self, id):
-        for item in self.contents[id]:
+        for item in self.widget_maker.contents[id]:
             item.config(state=DISABLED)
 
     def toggle(self, id):
-        for item in self.contents[id]:
+        for item in self.widget_maker.contents[id]:
             if str(item['state']).lower() == 'normal': item.config(state=DISABLED)
             else: item.confit(state=NORMAL)
 
     def clear(self, id):
         widget_name = ''
         try:
-            for widget in self.contents[id]:
+            for widget in self.widget_maker.contents[id]:
                 widget_name = str(type(widget))
                 if not isinstance(widget,Label): widget.delete('1.0','end') 
         except Exception as e: print(f'cant clear {widget_name}' )
 
     def clear_all(self):
         widget_name = ''
-        for widget_list in list(self.contents.values()):
+        for widget_list in list(self.widget_maker.contents.values()):
             for widget in widget_list: 
                 if not isinstance(widget, Label):
                     widget_name = str(type(widget))
@@ -161,6 +171,7 @@ class Widget_Maker:
     
     def __init__(self, screen):
         self.screen = screen
+        self.contents = {}
     
     def _create_form_content(self, widget_type, text, size=(), coord=(), pack=True, options=[], command=None, true_command=None, false_command=None):
         ''' internal use to create the widgets and return their id and variables if applicable '''
@@ -182,7 +193,7 @@ class Widget_Maker:
         for widget in widgets: widget.pack()
         return id, variable
 
-    def _create_option_menu(self, text, options:list[str]) -> tuple:
+    def _create_option_menu(self, text, options:"list[str]") -> tuple:
         ''' create an option menu and fill with list of options
         @param the text of associated label if not string or empty, no label is created
         @param options: the list of options to drop down. must be list of string
@@ -213,7 +224,7 @@ class Widget_Maker:
         obj.configure(height=height, width=width)
         return None, [obj]
 
-    def _create_entry(self, text, height, width) -> tuple[StringVar, list]:
+    def _create_entry(self, text, height, width) -> "tuple[StringVar, list]":
         '''create an "entry" widget
         @return tuple: stringVar of this entry and list containing the objects created - a label and the entry'''
         var = StringVar()
@@ -222,7 +233,7 @@ class Widget_Maker:
         obj.configure(width=width)
         return var,[label,obj]
 
-    def _create_text(self, text, height, width) -> tuple[TextWrapper, list]:
+    def _create_text(self, text, height, width) -> "tuple[TextWrapper, list]":
         ''' create a "text" widget. 
         @param the text of associated label if not string or empty, no label is created
         @return tuple: stringVar of this entry and list containing the objects created - a label and a TextWrapper for accessing the variable'''
@@ -246,3 +257,13 @@ class Widget_Maker:
         checkbox = tk.Checkbutton(self.screen, text=text, variable=var, onvalue=True, offvalue=False, command=fn, )
         checkbox.pack()
         return var, [checkbox]
+    
+    
+parent = Form(500,200, 'parent')
+
+# def generate_child(parent):
+#     child = parent.generate_child(300,300, 'child')
+#     child.mainloop()
+    
+# parent.add_button('generate child', command=lambda : generate_child(parent))
+parent.mainloop()
