@@ -31,17 +31,25 @@ class TextWrapper:
 class Form:
     def __init__(self, width, height, title, parent=None):
         ''' creates the form with width and height specified
-        @param parent: the parent screen if a form will create a child form
+        @param parent: the parent screen for the new form - the child will be the 
         to run the form, call mainloop() '''
 
         if parent_screen == None and parent != None: self.create_new_screen(width, height, title)
         elif parent == None: self.additional_window(width, height, title, parent)
         else: self.additional_window(width, height, title, parent_screen)
+        self.parent = parent
         self.contents = {}
         self.info = []
         self.widget_maker = Widget_Maker(self.screen)
 
     ''' === methods for to add widgets === '''
+
+    def get_parent(self): return self.parent
+    
+    def get_root(self):
+        ''' return the root window by recursively passing through parents '''
+        if self.parent == None: return self
+        else: return self.parent.get_root()
 
     def additional_window(self, width, height, title, parent):
         self.screen = Toplevel(parent)
