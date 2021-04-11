@@ -6,6 +6,10 @@ import uuid
 from uuid import UUID
 import tkinter.ttk as ttk
 
+# this tracks whether a tkinter form has already been created. 
+# If it has, a new form will actually be a child of this one, or of a specified parent
+parent_screen = None 
+
 class Content_type(Enum):
     BUTTON = 'button'
     ENTRY = 'entry'
@@ -23,15 +27,16 @@ class TextWrapper:
         return self.text.get('1.0',END)
 
 
+
 class Form:
     def __init__(self, width, height, title, parent=None):
         ''' creates the form with width and height specified
         @param parent: the parent screen if a form will create a child form
         to run the form, call mainloop() '''
 
-        self.screen = None
-        if parent != None: self.create_new_screen(width, height, title)
-        else: self.additional_window(width, height, title, parent)
+        if parent_screen == None and parent != None: self.create_new_screen(width, height, title)
+        elif parent == None: self.additional_window(width, height, title, parent)
+        else: self.additional_window(width, height, title, parent_screen)
         self.contents = {}
         self.info = []
         self.widget_maker = Widget_Maker(self.screen)
